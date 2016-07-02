@@ -54,4 +54,8 @@ startup_32:
   sti #任务0堆栈中断场景
   pushl $0x17 #ss
   pushl $init_stack #esp
-  pushfl
+  pushfl  #标志寄存器
+  pushl $0x0f #cs
+  pushl $task0  #eip
+  iret
+  
