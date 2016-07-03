@@ -58,4 +58,80 @@ startup_32:
   pushl $0x0f #cs
   pushl $task0  #eip
   iret
-  
+#3个中断处理程序：默认中断、定时中断、系统调用中断
+.align 2
+ignore_int:
+  push  %ds
+  pushl %eax
+  movl  $0x10,%eax
+  mov %ax,%ds
+  movl  $67,%eax
+  call  write_char
+  popl  %eax
+  pop %ds
+  iret
+.align 2
+timer_interrupt:
+  push  %ds
+  pushl %eax
+  movl  $0x10,%eax
+  mov %ax,%ds
+  movb  $0x20,%al #向8259A发送EOI命令
+  outb  %al,$0x20
+  movl  $1,%eax
+  cmpl  %eax,current
+  je  1f  #当前任务是1
+  movl  %eax,current  #当前任务是0
+  ljmp  $TSS_SEL,$0
+  jmp 2f
+1:  movl  $0,current
+    ljmp  $TSS0_SEL,$0
+2:  popl  %eax
+    pop %ds
+    iret
+.align 2
+system_interrupt:
+  push  %ds
+  pushl %edx
+  pushl %ecx
+  pushl %ebx
+  pushl %eax
+  movl  $0x10,%edx
+  mov %dx,%ds
+  call  write_char
+  popl  %eax
+  popl  %ebx
+  popl  %ecx
+  popl  %edx
+  pop %ds
+  iret
+current:.long 0
+scr_loc:.long 0
+.align 2
+lidt_opcode:
+  .word 256*8-1
+  .long idt
+lgdt_opcode:
+  .word (end_gdt-gdt)-1
+  .long gdt
+.align 3
+idt:  .fill 256,8,0
+gdt:  .quad 0x0000000000000000
+      .quad 0x00c09a00000007ff
+      .quad 0x00c09200000007ff      
+      .quad 0x00c0920b80000002
+      .word 0x68,tss0,0xe900,0x0
+      .word 0x40,ldt0,0xe200,0x0
+      .word 0x68,tss1,0xe900,0x0
+      .word 0x40,ldt1,0xe200,0x0
+end_gdt:
+        .fill 128,4,0 #内核堆栈
+init_stact:
+        .long init_stack
+        .word 0x10
+.align 3
+ldt0: .quad 0x0000000000000000
+      .quad 0x00c0fa00000003ff
+      .quad 0x00c0fa00000003ff
+tss0: .long 0
+      .long krn_stk0,0x10
