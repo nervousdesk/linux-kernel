@@ -32,7 +32,8 @@ ok_load:
   sub si,si
   sub di,di
   mov cx,#0x1000  !移动4k次，每次一个word
-  rep movw
+  rep 
+    movw
 !加载IDT和GDT基地址寄存器IDTR和GDTR
   mov ax,#BOOTSEG
   mov ds,ax
