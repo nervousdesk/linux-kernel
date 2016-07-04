@@ -2,7 +2,7 @@
 !最后进入保护模式，并跳转到内存0（head代码）继续运行
 BOOTSEG=0x07c0        !本程序(引导扇区)被BIOS加载到内存0x7c00处
 SYSSEG=0x1000
-SYSLEN==17            !内核占用最大磁盘扇区数
+SYSLEN=17            !内核占用最大磁盘扇区数
 entry start
 start:
   jmpi go,#BOOTSEG
